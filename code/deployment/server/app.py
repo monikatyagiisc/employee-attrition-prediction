@@ -1,33 +1,54 @@
-import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import joblib  # Replace with your model's library for loading
+from typing import Optional
+import pandas as pd
+import joblib
 import uvicorn
 
 # Load the model
 try:
     model = joblib.load("model.pkl")
-
     if model:
         print("Model loaded successfully!")
 except Exception as e:
     raise RuntimeError(f"Error loading the model: {e}")
 
-# Define input data schema
+# Input schema for FastAPI
 
 
-# class ModelInput(BaseModel):
-#     features: list
+from typing import Optional
+from pydantic import BaseModel
+
 
 class ModelInput(BaseModel):
-    age: float
-    monthly_income: float
-    job_satisfaction: int
-    over_time: str  # Accept "Yes"/"No"
-    work_life_balance: int
+    TravelProfile: Optional[str] = None
+    Department: Optional[str] = None
+    EducationField: Optional[str] = None
+    Gender: Optional[str] = None
+    Designation: Optional[str] = None
+    MaritalStatus: Optional[str] = None
+    Age: Optional[float] = 30.0  # Default value
+    CurrentProfile: Optional[float] = 1.0  # Default value
+    ESOPs: Optional[int] = 0  # Default value
+    EmployeeID: Optional[int] = 1  # Default value
+    HomeToWork: Optional[float] = 10.0  # Default value
+    HourlnWeek: Optional[float] = 40.0  # Default value
+    Involvement: Optional[int] = 3  # Default value
+    JobSatisfaction: Optional[int] = 3  # Default value
+    LastPromotion: Optional[float] = 2.0  # Default value
+    MonthlyIncome: Optional[float] = 50000.0  # Default value
+    NumCompaniesWorked: Optional[float] = 2.0  # Default value
+    OverTime: Optional[str] = "No"  # Default value
+    SalaryHikelastYear: Optional[float] = 10.0  # Default value
+    WorkExperience: Optional[float] = 8.0  # Default value
+    WorkLifeBalance: Optional[int] = 3  # Default value
+
+    class Config:
+        extra = "ignore"
 
 
+# Default and feature order settings
 DEFAULT_FEATURES = {
     "TravelProfile_Rarely": 1,
     "TravelProfile_Yes": 0,
@@ -90,12 +111,48 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # Change to specific origin if needed (e.g., ["http://localhost:3000"])
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def preprocess_payload(input_data: ModelInput):
+    # Start with default features
+    features = DEFAULT_FEATURES.copy()
+
+    # Update numerical fields with validated and transformed data
+    features.update({
+        "Age": input_data.Age or 30,
+        "MonthlyIncome": input_data.MonthlyIncome or 50000,
+        "JobSatisfaction": input_data.JobSatisfaction or 3,
+        "OverTime": 1 if (input_data.OverTime or "No").strip().lower() == "yes" else 0,
+        "WorkLifeBalance": input_data.WorkLifeBalance or 3,
+        "CurrentProfile": input_data.CurrentProfile or 1,
+        "ESOPs": input_data.ESOPs or 0,
+        "HomeToWork": input_data.HomeToWork or 10,
+        "HourlnWeek": input_data.HourlnWeek or 40,
+        "Involvement": input_data.Involvement or 3,
+        "LastPromotion": input_data.LastPromotion or 2,
+        "NumCompaniesWorked": input_data.NumCompaniesWorked or 2,
+        "SalaryHikelastYear": input_data.SalaryHikelastYear or 10,
+        "WorkExperience": input_data.WorkExperience or 8,
+    })
+
+    # Dynamic one-hot encoding for categorical fields
+    for field in ["TravelProfile", "Department", "EducationField", "Gender", "Designation", "MaritalStatus"]:
+        value = getattr(input_data, field, None)
+        if value:
+            for key in features.keys():
+                if key.startswith(f"{field}_"):
+                    features[key] = 0
+            features[f"{field}_{value.strip()}"] = 1
+
+    # Align with FEATURE_ORDER
+    final_features = {key: features.get(key, 0) for key in FEATURE_ORDER}
+
+    return final_features
 
 
 @app.post("/predict")
@@ -104,20 +161,11 @@ def predict(input_data: ModelInput):
         # Debug: Log the input
         print("Received data:", input_data)
 
-        # Start with default features
-        features = DEFAULT_FEATURES.copy()
+        # Preprocess the input data
+        processed_data = preprocess_payload(input_data)
 
-        # Update features with provided input
-        features.update({
-            "Age": input_data.age,
-            "MonthlyIncome": input_data.monthly_income,
-            "JobSatisfaction": input_data.job_satisfaction,
-            "OverTime": 1 if input_data.over_time.lower() == "yes" else 0,
-            "WorkLifeBalance": input_data.work_life_balance,
-        })
-
-        # Create a DataFrame in the correct feature order
-        input_df = pd.DataFrame([features], columns=FEATURE_ORDER)
+        # Create a DataFrame with the correct feature order
+        input_df = pd.DataFrame([processed_data], columns=FEATURE_ORDER)
 
         # Debug: Log the DataFrame
         print("DataFrame for Prediction:\n", input_df)
@@ -132,10 +180,9 @@ def predict(input_data: ModelInput):
         return {"prediction": prediction.tolist()}
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Model prediction error: {e}")
+            status_code=400, detail=f"Model prediction error: {e}"
+        )
 
 
-# Run locally on port 4000
 if __name__ == "__main__":
-
     uvicorn.run(app, host="0.0.0.0", port=4000)
