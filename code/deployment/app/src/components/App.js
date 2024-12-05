@@ -294,6 +294,48 @@ function App() {
                         required
                     />
                 </div>
+                <div className="form-group">
+                    <label htmlFor="JobSatisfaction">Job Satisfaction:</label>
+                    <input
+                        type="number"
+                        id="JobSatisfaction"
+                        name="JobSatisfaction"
+                        value={employeeData.JobSatisfaction}
+                        onChange={handleChange}
+                        placeholder="Enter Job Satisfaction score (1-5)"
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="LastPromotion">Years Since Last Promotion:</label>
+                    <input
+                        type="number"
+                        id="LastPromotion"
+                        name="LastPromotion"
+                        value={employeeData.LastPromotion}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="MonthlyIncome">Monthly Income:</label>
+                    <input
+                        type="number"
+                        id="MonthlyIncome"
+                        name="MonthlyIncome"
+                        value={employeeData.MonthlyIncome}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="NumCompaniesWorked">Number of Companies Worked:</label>
+                    <input
+                        type="number"
+                        id="NumCompaniesWorked"
+                        name="NumCompaniesWorked"
+                        value={employeeData.NumCompaniesWorked}
+                        onChange={handleChange}
+                    />
+                </div>
                 <button type="submit" className="submit-button">
                     Predict
                 </button>
