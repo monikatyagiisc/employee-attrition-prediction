@@ -14,13 +14,7 @@ try:
 except Exception as e:
     raise RuntimeError(f"Error loading the model: {e}")
 
-# Input schema for FastAPI
-
-
-from typing import Optional
-from pydantic import BaseModel
-
-
+# Define input schema for FastAPI
 class ModelInput(BaseModel):
     TravelProfile: Optional[str] = None
     Department: Optional[str] = None
@@ -48,33 +42,33 @@ class ModelInput(BaseModel):
         extra = "ignore"
 
 
-# Default and feature order settings
+# Default feature values and order
 DEFAULT_FEATURES = {
-    "TravelProfile_Rarely": 1,
+    "TravelProfile_Rarely": 0,
     "TravelProfile_Yes": 0,
     "TravelProfile_nan": 0,
     "Department_Marketing": 0,
-    "Department_Sales": 1,
+    "Department_Sales": 0,
     "Department_nan": 0,
-    "EducationField_Engineer": 1,
+    "EducationField_Engineer": 0,
     "EducationField_MBA": 0,
     "EducationField_Marketing Diploma": 0,
     "EducationField_Other": 0,
     "EducationField_Statistics": 0,
     "EducationField_nan": 0,
     "Gender_Female": 0,
-    "Gender_Male": 1,
+    "Gender_Male": 0,
     "Gender_nan": 0,
-    "Designation_Executive": 1,
+    "Designation_Executive": 0,
     "Designation_Manager": 0,
     "Designation_Senior Manager": 0,
     "Designation_VP": 0,
     "Designation_nan": 0,
     "MaritalStatus_M": 0,
     "MaritalStatus_Married": 0,
-    "MaritalStatus_Single": 1,
+    "MaritalStatus_Single": 0,
     "MaritalStatus_nan": 0,
-    "Age": 30,  # Default value
+    "Age": 30,
     "CurrentProfile": 5,
     "ESOPs": 0,
     "EmployeeID": 1,
@@ -83,12 +77,12 @@ DEFAULT_FEATURES = {
     "Involvement": 3,
     "JobSatisfaction": 3,
     "LastPromotion": 2,
-    "MonthlyIncome": 50000,  # Default value
+    "MonthlyIncome": 50000,
     "NumCompaniesWorked": 2,
-    "OverTime": 0,  # Default value for "No"
+    "OverTime": 0,
     "SalaryHikelastYear": 10,
     "WorkExperience": 8,
-    "WorkLifeBalance": 3
+    "WorkLifeBalance": 3,
 }
 
 FEATURE_ORDER = [
@@ -117,19 +111,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 def preprocess_payload(input_data: ModelInput):
     # Start with default features
     features = DEFAULT_FEATURES.copy()
 
-    # Update numerical fields with validated and transformed data
+    # Update numerical fields, using defaults for missing or invalid values
     features.update({
         "Age": input_data.Age or 30,
         "MonthlyIncome": input_data.MonthlyIncome or 50000,
-        "JobSatisfaction": input_data.JobSatisfaction or 3,
-        "OverTime": 1 if (input_data.OverTime or "No").strip().lower() == "yes" else 0,
+        "JobSatisfaction": int(input_data.JobSatisfaction) or 3,
+        "OverTime": 1 if (input_data.OverTime or "No").lower() == "yes" else 0,
         "WorkLifeBalance": input_data.WorkLifeBalance or 3,
-        "CurrentProfile": input_data.CurrentProfile or 1,
+        "CurrentProfile": input_data.CurrentProfile or 5,
         "ESOPs": input_data.ESOPs or 0,
         "HomeToWork": input_data.HomeToWork or 10,
         "HourlnWeek": input_data.HourlnWeek or 40,
@@ -149,7 +142,7 @@ def preprocess_payload(input_data: ModelInput):
                     features[key] = 0
             features[f"{field}_{value.strip()}"] = 1
 
-    # Align with FEATURE_ORDER
+    # Align features with FEATURE_ORDER
     final_features = {key: features.get(key, 0) for key in FEATURE_ORDER}
 
     return final_features
@@ -158,23 +151,14 @@ def preprocess_payload(input_data: ModelInput):
 @app.post("/predict")
 def predict(input_data: ModelInput):
     try:
-        # Debug: Log the input
-        print("Received data:", input_data)
-
         # Preprocess the input data
         processed_data = preprocess_payload(input_data)
 
         # Create a DataFrame with the correct feature order
         input_df = pd.DataFrame([processed_data], columns=FEATURE_ORDER)
 
-        # Debug: Log the DataFrame
-        print("DataFrame for Prediction:\n", input_df)
-
         # Make prediction
         prediction = model.predict(input_df)
-
-        # Debug: Log the prediction
-        print(f'Prediction = {prediction}')
 
         # Return the prediction as JSON
         return {"prediction": prediction.tolist()}

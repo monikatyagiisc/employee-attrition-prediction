@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState } from "react";
+import "./App.css";
 
 function App() {
     const [employeeData, setEmployeeData] = useState({
-        TravelProfile: '',
-        Department: '',
-        EducationField: '',
-        Gender: '',
-        Designation: '',
-        MaritalStatus: '',
-        Age: '',
-        CurrentProfile: '',
-        ESOPs: '',
-        EmployeeID: '',
-        HomeToWork: '',
-        HourlnWeek: '',
-        Involvement: '',
-        JobSatisfaction: '',
-        LastPromotion: '',
-        MonthlyIncome: '',
-        NumCompaniesWorked: '',
-        OverTime: '',
-        SalaryHikelastYear: '',
-        WorkExperience: '',
-        WorkLifeBalance: '',
+        TravelProfile: "",
+        Department: "",
+        EducationField: "",
+        Gender: "",
+        Designation: "",
+        MaritalStatus: "",
+        Age: "",
+        CurrentProfile: "",
+        ESOPs: "",
+        EmployeeID: "",
+        HomeToWork: "",
+        HourlnWeek: "",
+        Involvement: "",
+        JobSatisfaction: "",
+        LastPromotion: "",
+        MonthlyIncome: "",
+        NumCompaniesWorked: "",
+        OverTime: "",
+        SalaryHikelastYear: "",
+        WorkExperience: "",
+        WorkLifeBalance: "",
     });
 
     const [prediction, setPrediction] = useState(null);
@@ -36,15 +36,15 @@ function App() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const apiUrl = 'http://127.0.0.1:4000/predict';
+        const apiUrl = "http://127.0.0.1:4000/predict";
 
         try {
-            console.log('Payload:', employeeData);
+            console.log("Payload:", employeeData);
 
             const response = await fetch(apiUrl, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify(employeeData),
             });
@@ -56,14 +56,14 @@ function App() {
             const data = await response.json();
             const predictionValue = data.prediction[0];
             const predictionMessage =
-                predictionValue === 1 ? 'High Attrition Risk' : 'Low Attrition Risk';
+                predictionValue === 1 ? "High Attrition Risk" : "Low Attrition Risk";
 
             setPrediction(predictionMessage);
             setError(null);
         } catch (err) {
-            console.error('Error fetching prediction:', err);
+            console.error("Error fetching prediction:", err);
             setPrediction(null);
-            setError('Failed to fetch prediction. Please try again.');
+            setError("Failed to fetch prediction. Please try again.");
         }
     };
 
@@ -73,7 +73,7 @@ function App() {
                 <h1>Employee Attrition Prediction</h1>
             </header>
             <form onSubmit={handleSubmit} className="Prediction-form">
-                {/* Static Fields */}
+                {/* All Fields */}
                 <div className="form-group">
                     <label htmlFor="TravelProfile">Travel Profile:</label>
                     <select
@@ -179,7 +179,6 @@ function App() {
                         value={employeeData.Age}
                         onChange={handleChange}
                         required
-                        placeholder="Enter age"
                     />
                 </div>
                 <div className="form-group">
@@ -191,7 +190,6 @@ function App() {
                         value={employeeData.CurrentProfile}
                         onChange={handleChange}
                         required
-                        placeholder="Enter current profile"
                     />
                 </div>
                 <div className="form-group">
@@ -203,7 +201,6 @@ function App() {
                         value={employeeData.ESOPs}
                         onChange={handleChange}
                         required
-                        placeholder="Enter ESOPs"
                     />
                 </div>
                 <div className="form-group">
@@ -215,11 +212,10 @@ function App() {
                         value={employeeData.EmployeeID}
                         onChange={handleChange}
                         required
-                        placeholder="Enter employee ID"
                     />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="HomeToWork">Home to Work:</label>
+                    <label htmlFor="HomeToWork">Home to Work Distance:</label>
                     <input
                         type="number"
                         id="HomeToWork"
@@ -227,7 +223,6 @@ function App() {
                         value={employeeData.HomeToWork}
                         onChange={handleChange}
                         required
-                        placeholder="Enter home to work distance"
                     />
                 </div>
                 <div className="form-group">
@@ -239,7 +234,6 @@ function App() {
                         value={employeeData.HourlnWeek}
                         onChange={handleChange}
                         required
-                        placeholder="Enter hours worked in a week"
                     />
                 </div>
                 <div className="form-group">
@@ -251,11 +245,10 @@ function App() {
                         value={employeeData.Involvement}
                         onChange={handleChange}
                         required
-                        placeholder="Enter involvement score"
                     />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="OverTime1">OverTime:</label>
+                    <label htmlFor="OverTime">OverTime:</label>
                     <select
                         id="OverTime"
                         name="OverTime"
@@ -268,17 +261,51 @@ function App() {
                         <option value="No">No</option>
                     </select>
                 </div>
-                {/* Add similar inputs for remaining fields */}
+                <div className="form-group">
+                    <label htmlFor="SalaryHikelastYear">Salary Hike Last Year:</label>
+                    <input
+                        type="number"
+                        id="SalaryHikelastYear"
+                        name="SalaryHikelastYear"
+                        value={employeeData.SalaryHikelastYear}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="WorkExperience">Work Experience:</label>
+                    <input
+                        type="number"
+                        id="WorkExperience"
+                        name="WorkExperience"
+                        value={employeeData.WorkExperience}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="WorkLifeBalance">Work Life Balance:</label>
+                    <input
+                        type="number"
+                        id="WorkLifeBalance"
+                        name="WorkLifeBalance"
+                        value={employeeData.WorkLifeBalance}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
                 <button type="submit" className="submit-button">
                     Predict
                 </button>
             </form>
+
             {prediction && (
                 <div className="Prediction">
                     <h2>Prediction Result:</h2>
                     <p>{prediction}</p>
                 </div>
             )}
+
             {error && (
                 <div className="Error">
                     <h2>Error:</h2>
